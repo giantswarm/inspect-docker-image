@@ -1,7 +1,7 @@
 import requests
 import json
-import sys
-from pprint import pprint
+import humanize
+
 
 class DockerHubImageInspector(object):
 
@@ -102,5 +102,5 @@ if __name__ == "__main__":
     for l in dhii.layers:
         bytes = dhii.get_layer_size(l)
         size += bytes
-        print("  %s - %s Bytes" % (l, bytes))
-    print("Image size: %d Bytes" % size)
+        print("  %s - %s" % (l, humanize.naturalsize(bytes)))
+    print("Image size: %s" % humanize.naturalsize(size))
