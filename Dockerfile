@@ -4,4 +4,5 @@ RUN pip install --upgrade pip
 ADD requirements.txt /
 RUN pip install -r /requirements.txt
 ADD imageinspector.py /
+ADD service.py /
 ENTRYPOINT ["python", "/imageinspector.py"]
