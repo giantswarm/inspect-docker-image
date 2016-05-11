@@ -2,7 +2,7 @@
   "name": "simple_service",
   "components": {
     "api": {
-      "image": "giantswarm/inspect-docker-image:web",
+      "image": "giantswarm/inspect-docker-image:webservice",
       "ports": 5000,
       "domains": {
         "5000": "idi.gigantic.io"
