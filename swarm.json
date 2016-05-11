@@ -1,0 +1,14 @@
+{
+  "name": "simple_service",
+  "components": {
+    "api": {
+      "image": "giantswarm/docker-image-inspector:web",
+      "ports": 5000,
+      "domains": {
+        "5000": "dii.gigantic.io"
+      },
+      "entrypoint": "python",
+      "args": ["/service.py"]
+    }
+  }
+}

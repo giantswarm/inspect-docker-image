@@ -29,7 +29,7 @@ pip install -r requirements.txt
 ## Run
 
 ```nohighlight
-python inspect.py redis:3.2
+python imageinspector.py redis:3.2
 ```
 
 The output looks something like this:
