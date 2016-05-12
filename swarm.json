@@ -2,7 +2,7 @@
   "name": "inspect-docker-image",
   "components": {
     "api": {
-      "image": "giantswarm/inspect-docker-image:webservice",
+      "image": "giantswarm/inspect-docker-image:latest",
       "ports": 5000,
       "domains": {
         "5000": "idi.gigantic.io"
