@@ -1,3 +1,5 @@
+[![This image on DockerHub](https://img.shields.io/docker/pulls/giantswarm/inspect-docker-image.svg)](http://hub.docker.com/giantswarm/inspect-docker-image) [![IRC Channel](https://img.shields.io/badge/irc-%23giantswarm-blue.svg)](https://kiwiirc.com/client/irc.freenode.net/#giantswarm)
+
 # Dockerhub Image Inspector
 
 A little utility/POC to fetch info on a particular image from the public Docker registry
