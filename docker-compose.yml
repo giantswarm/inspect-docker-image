@@ -4,5 +4,3 @@ api:
     command: ["/service.py"]
     ports:
      - "5000:5000"
-    environment:
-      PREFERRED_URL_SCHEME: http
