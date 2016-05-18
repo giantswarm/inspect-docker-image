@@ -1,3 +1,5 @@
 requests
 humanize
 Flask
+Flask-Sockets
+gunicorn

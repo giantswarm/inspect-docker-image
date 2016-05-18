@@ -6,6 +6,7 @@ from flask import redirect
 from flask import url_for
 from flask import abort
 from flask.json import JSONEncoder
+from flask_sockets import Sockets
 from datetime import datetime
 from datetime import timedelta
 from imageinspector import DockerHubImageInspector
@@ -28,11 +29,23 @@ class CustomJSONEncoder(JSONEncoder):
 
 app = Flask(__name__)
 app.json_encoder = CustomJSONEncoder
+sockets = Sockets(app)
 
 
 @app.route("/")
 def hello():
     return jsonify(message="Hello World!")
+
+@sockets.route("/ws")
+def websocket(ws):
+    while not ws.closed:
+        message = ws.receive()
+        print(message)
+        ws.send(message)
+    #for n in range(3):
+    #    ws.send({"time": time.time()})
+    #    time.sleep(1)
+
 
 @app.route("/<namespace>/<image>")
 def canonical_image_details(namespace, image):
@@ -70,18 +83,11 @@ def canonical_image_details(namespace, image):
     duration = time.time() - start
     return jsonify(metadata=result, duration=duration, error=error)
 
-@app.route("/<image>")
-def image_details_redirect(image):
-    if image == "favicon.ico":
-        abort(404)
-    url = url_for("canonical_image_details",
-        namespace="library",
-        image=image)
-    return redirect(url)
+
+
 
 if __name__ == '__main__':
-    debug = os.getenv("DEBUGGING")
-    if debug is None:
-        app.run(host="0.0.0.0", port=5000, debug=False)
-    else:
-        app.run(host="0.0.0.0", port=5000, debug=True)
+    from gevent import pywsgi
+    from geventwebsocket.handler import WebSocketHandler
+    server = pywsgi.WSGIServer(('', 5000), app, handler_class=WebSocketHandler)
+    server.serve_forever()

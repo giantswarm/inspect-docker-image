@@ -1,0 +1,8 @@
+api:
+    image: giantswarm/inspect-docker-image
+    entrypoint: python
+    command: ["/service.py"]
+    #entrypoint: gunicorn
+    #command: ["-b", "0.0.0.0:5000", "-k", "flask_sockets.worker", "service:app"]
+    ports:
+     - "5000:5000"
