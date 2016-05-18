@@ -30,7 +30,9 @@ class CustomJSONEncoder(JSONEncoder):
 app = Flask(__name__)
 CORS(app, resources={r"/*": {"origins": "*"}})
 app.json_encoder = CustomJSONEncoder
-
+app.config.update(dict(
+    PREFERRED_URL_SCHEME = os.getenv("PREFERRED_URL_SCHEME", "https")
+))
 
 @app.route("/")
 def hello():

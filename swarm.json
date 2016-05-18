@@ -5,10 +5,16 @@
       "image": "giantswarm/inspect-docker-image:latest",
       "ports": 5000,
       "domains": {
-        "5000": "idi.gigantic.io"
+        "5000": [
+          "idi.gigantic.io",
+          "idi.giantswarm.io"
+        ]
       },
       "entrypoint": "python",
-      "args": ["/service.py"]
+      "args": ["/service.py"],
+      "env": [
+        "PREFERRED_URL_SCHEME=https"
+      ]
     }
   }
 }
