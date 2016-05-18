@@ -10,6 +10,7 @@ from flask.json import JSONEncoder
 from datetime import datetime
 from datetime import timedelta
 from imageinspector import DockerHubImageInspector
+from imageinspector import DockerImageInspector
 import os
 import time
 from pprint import pprint
@@ -52,32 +53,32 @@ def canonical_image_details(registry, namespace, image):
     error = None
     try:
         if registry == app.config["DEFAULT_REGISTRY"]:
-            dhii = DockerHubImageInspector(namespace + "/" + image, tag)
+            dii = DockerHubImageInspector(namespace + "/" + image, tag)
         else:
-            error = "Unsupported registry"
-            return jsonify(metadata={}, duration=(time.time() - start), error=error)
+            dii = DockerImageInspector(registry, namespace + "/" + image, tag)
 
         result = {
-            "schema_version": dhii.manifest["schemaVersion"],
-            "name": dhii.manifest["name"],
-            "tag": dhii.manifest["tag"],
-            "architecture": dhii.manifest["architecture"],
-            "history_length": len(dhii.manifest["history"]),
-            "num_layers": len(dhii.layers),
-            "config": json.loads(dhii.manifest["history"][0]["v1Compatibility"])["container_config"],
+            "schema_version": dii.manifest["schemaVersion"],
+            "name": dii.manifest["name"],
+            "tag": dii.manifest["tag"],
+            "architecture": dii.manifest["architecture"],
+            "history_length": len(dii.manifest["history"]),
+            "num_layers": len(dii.layers),
+            "config": json.loads(dii.manifest["history"][0]["v1Compatibility"])["container_config"],
             "layers": [],
             "image_size": 0
         }
-        for l in dhii.layers:
-            bytes = dhii.get_layer_size(l)
-            result["image_size"] += bytes
-            result["layers"].append({"digest": l, "size": bytes})
+        for l in dii.layers:
+            bytesize = dii.get_layer_size(l)
+            if bytesize is not None:
+                result["image_size"] += bytesize
+            result["layers"].append({"digest": l, "size": bytesize})
     except HTTPError, e:
         if "404" in str(e):
             abort(404)
         else:
             error = str(e)
-    except e:
+    except Exception, e:
         error = str(e)
     duration = time.time() - start
     return jsonify(metadata=result, duration=duration, error=error)
