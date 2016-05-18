@@ -31,7 +31,9 @@ app = Flask(__name__)
 CORS(app, resources={r"/*": {"origins": "*"}})
 app.json_encoder = CustomJSONEncoder
 app.config.update(dict(
-    PREFERRED_URL_SCHEME = os.getenv("PREFERRED_URL_SCHEME", "https")
+    PREFERRED_URL_SCHEME = os.getenv("PREFERRED_URL_SCHEME", "https"),
+    DEFAULT_REGISTRY = "index.docker.io",
+    DEFAULT_NAMESPACE = "library"
 ))
 
 @app.route("/")
@@ -39,8 +41,8 @@ def hello():
     return jsonify(message="Hello World!",
                    source="https://github.com/giantswarm/inspect-docker-image")
 
-@app.route("/<namespace>/<image>")
-def canonical_image_details(namespace, image):
+@app.route("/<registry>/<namespace>/<image>")
+def canonical_image_details(registry, namespace, image):
     start = time.time()
     if ":" in image:
         (image, tag) = image.split(":")
@@ -49,7 +51,12 @@ def canonical_image_details(namespace, image):
     result = {}
     error = None
     try:
-        dhii = DockerHubImageInspector(namespace + "/" + image, tag)
+        if registry == app.config["DEFAULT_REGISTRY"]:
+            dhii = DockerHubImageInspector(namespace + "/" + image, tag)
+        else:
+            error = "Unsupported registry"
+            return jsonify(metadata={}, duration=(time.time() - start), error=error)
+
         result = {
             "schema_version": dhii.manifest["schemaVersion"],
             "name": dhii.manifest["name"],
@@ -75,12 +82,23 @@ def canonical_image_details(namespace, image):
     duration = time.time() - start
     return jsonify(metadata=result, duration=duration, error=error)
 
+
 @app.route("/<image>")
-def image_details_redirect(image):
+def namespace_image_redirect(image):
     if image == "favicon.ico":
         abort(404)
     url = url_for("canonical_image_details",
-        namespace="library",
+        registry=app.config["DEFAULT_REGISTRY"],
+        namespace=app.config["DEFAULT_NAMESPACE"],
+        image=image)
+    return redirect(url)
+
+
+@app.route("/<namespace>/<image>")
+def image_redirect(namespace, image):
+    url = url_for("canonical_image_details",
+        registry=app.config["DEFAULT_REGISTRY"],
+        namespace=namespace,
         image=image)
     return redirect(url)
 
