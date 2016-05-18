@@ -2,39 +2,27 @@ import requests
 import json
 import humanize
 
+class DockerImageInspector(object):
 
-class DockerHubImageInspector(object):
-
-    def __init__(self, repository_name, tag="latest"):
-        self.base_url = "https://registry.hub.docker.com"
+    def __init__(self, registry_hostname, repository_name, tag="latest"):
+        self.base_url = "https://%s" % registry_hostname
         self.repository_name = repository_name
+        self.token = None
         self.tag = tag
         self.layers = set()
         self.layer_sizes = {}
         self.tags = []
         self.manifest = None
-        self.__get_token()
         self.get_tags()
         self.get_manifest()
-
-    def __get_token(self):
-        url = "https://auth.docker.io/token"
-        params = {
-            "service": "registry.docker.io",
-            "scope": "repository:{name}:pull".format(
-                name=self.repository_name)
-        }
-        r = requests.get(url, params=params)
-        r.raise_for_status()
-        self.token = r.json()["token"]
 
     def get_tags(self):
         url = "{base_url}/v2/{name}/tags/list".format(
                 base_url=self.base_url,
                 name=self.repository_name)
-        headers = {
-            "Authorization": "Bearer %s" % self.token
-        }
+        headers = {}
+        if self.token is not None:
+            headers["Authorization"] = "Bearer %s" % self.token
         r = requests.get(url, headers=headers)
         r.raise_for_status()
         self.tags = r.json()["tags"]
@@ -44,9 +32,9 @@ class DockerHubImageInspector(object):
                 base_url=self.base_url,
                 name=self.repository_name,
                 reference=self.tag)
-        headers = {
-            "Authorization": "Bearer %s" % self.token
-        }
+        headers = {}
+        if self.token is not None:
+            headers["Authorization"] = "Bearer %s" % self.token
         r = requests.get(url, headers=headers)
         r.raise_for_status()
         for l in r.json()["fsLayers"]:
@@ -62,14 +50,43 @@ class DockerHubImageInspector(object):
               base_url=self.base_url,
               name=self.repository_name,
               layer_hash=layer_hash)
-        headers = {
-            "Authorization": "Bearer %s" % self.token
-        }
+        headers = {}
+        if self.token is not None:
+            headers["Authorization"] = "Bearer %s" % self.token
         r = requests.head(url, headers=headers, allow_redirects=True)
         r.raise_for_status()
         if "content-length" in r.headers:
             self.layer_sizes[layer_hash] = int(r.headers["content-length"])
-        return int(r.headers["content-length"])
+        else:
+            self.layer_sizes[layer_hash] = None
+        return self.layer_sizes[layer_hash]
+
+
+class DockerHubImageInspector(DockerImageInspector):
+
+    def __init__(self, repository_name, tag="latest"):
+        self.base_url = "https://registry.hub.docker.com"
+        self.repository_name = repository_name
+        self.__get_token()
+        self.tag = tag
+        self.layers = set()
+        self.layer_sizes = {}
+        self.tags = []
+        self.manifest = None
+        self.get_tags()
+        self.get_manifest()
+
+    def __get_token(self):
+        url = "https://auth.docker.io/token"
+        params = {
+            "service": "registry.docker.io",
+            "scope": "repository:{name}:pull".format(
+                name=self.repository_name)
+        }
+        r = requests.get(url, params=params)
+        r.raise_for_status()
+        self.token = r.json()["token"]
+
 
 
 if __name__ == "__main__":
@@ -85,22 +102,42 @@ if __name__ == "__main__":
         image = args.image
         tag = "latest"
 
-    if "/" not in image:
-        image = "library/%s" % image
+    image_parts = image.split("/")
+    registry = None
+    namespace = None
+    repository = None
+    if len(image_parts) == 3:
+        registry = image_parts[-3]
+    else:
+        registry = "index.docker.io"
+    if len(image_parts) >= 2:
+        namespace = image_parts[-2]
+    else:
+        namespace = "library"
+    repository = image_parts[-1]
 
-    dhii = DockerHubImageInspector(image, tag)
-    print("Schema version: %s" % dhii.manifest["schemaVersion"])
-    print("Image name: %s" % dhii.manifest["name"])
-    print("Tag: %s" % dhii.manifest["tag"])
-    print("Architecture: %s" % dhii.manifest["architecture"])
-    print("Number of history entries: %d" % len(dhii.manifest["history"]))
+    image = "/".join([registry, namespace, repository])
+
+    if registry == "index.docker.io":
+        dii = DockerHubImageInspector(namespace + "/" + repository, tag)
+    else:
+        dii = DockerImageInspector(registry, namespace + "/" + repository, tag)
+
+    print("Schema version: %s" % dii.manifest["schemaVersion"])
+    print("Image name: %s" % dii.manifest["name"])
+    print("Tag: %s" % dii.manifest["tag"])
+    print("Architecture: %s" % dii.manifest["architecture"])
+    print("Number of history entries: %d" % len(dii.manifest["history"]))
     print("Configuration:")
-    print(json.dumps(json.loads(dhii.manifest["history"][0]["v1Compatibility"])["container_config"], indent=2))
-    print("Number of layers: %d" % len(dhii.layers))
+    print(json.dumps(json.loads(dii.manifest["history"][0]["v1Compatibility"])["container_config"], indent=2))
+    print("Number of layers: %d" % len(dii.layers))
     print("Layers:")
     size = 0
-    for l in dhii.layers:
-        bytes = dhii.get_layer_size(l)
-        size += bytes
-        print("  %s - %s" % (l, humanize.naturalsize(bytes)))
+    for l in dii.layers:
+        bytes = dii.get_layer_size(l)
+        if bytes is not None:
+            print("  %s - %s" % (l, humanize.naturalsize(bytes)))
+            size += bytes
+        else:
+            print("  %s - unknown" % l)
     print("Image size: %s" % humanize.naturalsize(size))
