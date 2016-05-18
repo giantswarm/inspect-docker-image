@@ -124,3 +124,70 @@ Layers:
   sha256:53c576ba5eccafa633606c947a44fed94a7ff4b8f965b8fdf10e0109cf64d9ff - 96 Bytes
 Image size: 74229694 Bytes
 ```
+
+## Webservice example output
+
+```json
+
+{
+  "duration": 3.5770351886749268, 
+  "error": null, 
+  "metadata": {
+    "architecture": "amd64", 
+    "config": {
+      "AttachStderr": false, 
+      "AttachStdin": false, 
+      "AttachStdout": false, 
+      "Cmd": [
+        "/bin/sh", 
+        "-c", 
+        "#(nop) CMD [\"nginx\" \"-g\" \"daemon off;\"]"
+      ], 
+      "Domainname": "", 
+      "Entrypoint": null, 
+      "Env": [
+        "PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin", 
+        "NGINX_VERSION=1.9.15-1~jessie"
+      ], 
+      "ExposedPorts": {
+        "443/tcp": {}, 
+        "80/tcp": {}
+      }, 
+      "Hostname": "f416997e8b71", 
+      "Image": "317a0530f60c747e425f5a011a943939db69d53beaad8f89c81ace4b487442df", 
+      "Labels": {}, 
+      "OnBuild": [], 
+      "OpenStdin": false, 
+      "StdinOnce": false, 
+      "Tty": false, 
+      "User": "", 
+      "Volumes": null, 
+      "WorkingDir": ""
+    }, 
+    "history_length": 8, 
+    "image_size": 71175964, 
+    "layers": [
+      {
+        "digest": "sha256:31c7abf879e0ca73db0d8cf61f06343aa653efd1be8cf1dec67f839a9beb71fa", 
+        "size": 19819882
+      }, 
+      {
+        "digest": "sha256:4ef177b369db36e463a9bd44b64669f2da2c80436d9d52178840c37783edcf0b", 
+        "size": 195
+      }, 
+      {
+        "digest": "sha256:8b87079b7a06f9b72e3cca2c984c60e118229c60f0bff855d822f758c112b485", 
+        "size": 51355855
+      }, 
+      {
+        "digest": "sha256:a3ed95caeb02ffe68cdd9fd84406680ae93d633cb16422d00e8a7c22955b46d4", 
+        "size": 32
+      }
+    ], 
+    "name": "library/nginx", 
+    "num_layers": 4, 
+    "schema_version": 1, 
+    "tag": "latest"
+  }
+}
+```
