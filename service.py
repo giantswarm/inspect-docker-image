@@ -14,7 +14,7 @@ from imageinspector import DockerImageInspector
 import os
 import time
 from pprint import pprint
-from requests.exceptions import HTTPError
+from requests.exceptions import HTTPError, ConnectTimeout
 
 class CustomJSONEncoder(JSONEncoder):
     def default(self, obj):
@@ -78,6 +78,8 @@ def canonical_image_details(registry, namespace, image):
             abort(404)
         else:
             error = str(e)
+    except ConnectTimeout, e:
+        error = str(e)
     except Exception, e:
         error = str(e)
     duration = time.time() - start

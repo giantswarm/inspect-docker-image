@@ -1,6 +1,8 @@
 import requests
 import json
 import humanize
+import sys
+from requests.exceptions import HTTPError, ConnectTimeout
 
 class DockerImageInspector(object):
 
@@ -23,7 +25,7 @@ class DockerImageInspector(object):
         headers = {}
         if self.token is not None:
             headers["Authorization"] = "Bearer %s" % self.token
-        r = requests.get(url, headers=headers)
+        r = requests.get(url, headers=headers, timeout=(3.05,10))
         r.raise_for_status()
         self.tags = r.json()["tags"]
 
@@ -35,7 +37,7 @@ class DockerImageInspector(object):
         headers = {}
         if self.token is not None:
             headers["Authorization"] = "Bearer %s" % self.token
-        r = requests.get(url, headers=headers)
+        r = requests.get(url, headers=headers, timeout=(3.05,10))
         r.raise_for_status()
         for l in r.json()["fsLayers"]:
             self.layers.add(l["blobSum"])
@@ -53,7 +55,7 @@ class DockerImageInspector(object):
         headers = {}
         if self.token is not None:
             headers["Authorization"] = "Bearer %s" % self.token
-        r = requests.head(url, headers=headers, allow_redirects=True)
+        r = requests.head(url, headers=headers, allow_redirects=True, timeout=(3.05,5))
         r.raise_for_status()
         if "content-length" in r.headers:
             self.layer_sizes[layer_hash] = int(r.headers["content-length"])
@@ -118,10 +120,20 @@ if __name__ == "__main__":
 
     image = "/".join([registry, namespace, repository])
 
-    if registry == "index.docker.io":
-        dii = DockerHubImageInspector(namespace + "/" + repository, tag)
-    else:
-        dii = DockerImageInspector(registry, namespace + "/" + repository, tag)
+    try:
+        if registry == "index.docker.io":
+            dii = DockerHubImageInspector(namespace + "/" + repository, tag)
+        else:
+            dii = DockerImageInspector(registry, namespace + "/" + repository, tag)
+    except HTTPError, e:
+        sys.stderr.write(str(e) + "\n")
+        sys.exit(1)
+    except ConnectTimeout, e:
+        sys.stderr.write(str(e) + "\n")
+        sys.exit(2)
+    except Exception, e:
+        sys.stderr.write("Unknown error: " + str(e) + "\n")
+        sys.exit(3)
 
     print("Schema version: %s" % dii.manifest["schemaVersion"])
     print("Image name: %s" % dii.manifest["name"])
