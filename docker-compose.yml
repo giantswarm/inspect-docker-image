@@ -1,0 +1,6 @@
+api:
+    image: giantswarm/inspect-docker-image
+    entrypoint: python
+    command: ["/service.py"]
+    ports:
+     - "5000:5000"

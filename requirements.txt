@@ -1,3 +1,4 @@
 requests
 humanize
 Flask
+flask-cors
