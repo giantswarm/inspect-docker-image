@@ -2,23 +2,48 @@
 
 # Dockerhub Image Inspector
 
-A little utility/POC to fetch info on a particular image from the public Docker registry
+A little utility/POC to fetch info on a particular image from the public Docker registry. Works both in CLI and web API mode.
 
-## Running it the Docker way
+## Running the CLI
 
-Pull the image:
+A public Docker image is available. Pull the image and create an alias:
 
 ```nohighlight
 docker pull giantswarm/inspect-docker-image
+alias idi="docker run --rm giantswarm/inspect-docker-image"
 ```
 
 Execute, to fetch info on `redis:3.2`, for example:
 
 ```nohighlight
-docker run --rm -ti giantswarm/inspect-docker-image redis:3.2
+idi redis:3.2
 ```
 
-## Install
+See below for example output.
+
+## Running the Webservice
+
+A `docker-compose.yml` file is provided, so you can simply launch the service like this:
+
+```nohighlight
+docker-compose up
+```
+
+This will make the API available on port 5000 via your docker IP.
+
+Here are a few cases to test:
+
+- `http://<docker_ip>:5000/nginx`
+- `http://<docker_ip>:5000/redis:3.2`
+- `http://<docker_ip>:5000/library/redis`
+- `http://<docker_ip>:5000/index.docker.io/library/redis`
+- `http://<docker_ip>:5000/index.docker.io/library/ubuntu:latest`
+- `http://<docker_ip>:5000/index.docker.io/giantswarm/helloworld`
+- `http://<docker_ip>:5000/quay.io/giantswarm/helloworld`
+
+## Development
+
+Set up your python environment for development like this:
 
 ```nohighlight
 git clone https://github.com/giantswarm/inspect-docker-image.git
@@ -28,11 +53,19 @@ source venv/bin/activate
 pip install -r requirements.txt
 ```
 
-## Run
+You can then execute the CLI like this:
 
 ```nohighlight
 python imageinspector.py redis:3.2
 ```
+
+and the service:
+
+```nohighlight
+DEBUGGING=1 python service.py
+```
+
+## CLI example output
 
 The output looks something like this:
 
