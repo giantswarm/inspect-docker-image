@@ -5,6 +5,7 @@ from flask import request
 from flask import redirect
 from flask import url_for
 from flask import abort
+from flask.ext.cors import CORS
 from flask.json import JSONEncoder
 from datetime import datetime
 from datetime import timedelta
@@ -27,12 +28,14 @@ class CustomJSONEncoder(JSONEncoder):
         return JSONEncoder.default(self, obj)
 
 app = Flask(__name__)
+CORS(app, resources={r"/*": {"origins": "*"}})
 app.json_encoder = CustomJSONEncoder
 
 
 @app.route("/")
 def hello():
-    return jsonify(message="Hello World!")
+    return jsonify(message="Hello World!",
+                   source="https://github.com/giantswarm/inspect-docker-image")
 
 @app.route("/<namespace>/<image>")
 def canonical_image_details(namespace, image):
