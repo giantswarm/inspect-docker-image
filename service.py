@@ -93,7 +93,8 @@ def namespace_image_redirect(image):
     url = url_for("canonical_image_details",
         registry=app.config["DEFAULT_REGISTRY"],
         namespace=app.config["DEFAULT_NAMESPACE"],
-        image=image)
+        image=image,
+        _scheme=app.config["PREFERRED_URL_SCHEME"])
     return redirect(url)
 
 
@@ -102,7 +103,8 @@ def image_redirect(namespace, image):
     url = url_for("canonical_image_details",
         registry=app.config["DEFAULT_REGISTRY"],
         namespace=namespace,
-        image=image)
+        image=image,
+        _scheme=app.config["PREFERRED_URL_SCHEME"])
     return redirect(url)
 
 if __name__ == '__main__':
