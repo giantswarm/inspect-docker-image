@@ -94,6 +94,7 @@ def namespace_image_redirect(image):
         registry=app.config["DEFAULT_REGISTRY"],
         namespace=app.config["DEFAULT_NAMESPACE"],
         image=image,
+        _external=True,
         _scheme=app.config["PREFERRED_URL_SCHEME"])
     return redirect(url)
 
@@ -104,6 +105,7 @@ def image_redirect(namespace, image):
         registry=app.config["DEFAULT_REGISTRY"],
         namespace=namespace,
         image=image,
+        _external=True,
         _scheme=app.config["PREFERRED_URL_SCHEME"])
     return redirect(url)
 
