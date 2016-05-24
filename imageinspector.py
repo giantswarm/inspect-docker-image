@@ -3,6 +3,7 @@ import json
 import humanize
 import sys
 from requests.exceptions import HTTPError, ConnectTimeout
+import dateutil.parser
 
 class DockerImageInspector(object):
 
@@ -11,6 +12,7 @@ class DockerImageInspector(object):
         self.repository_name = repository_name
         self.token = None
         self.tag = tag
+        self.create_date = None
         self.layers = set()
         self.layer_sizes = {}
         self.tags = []
@@ -39,9 +41,13 @@ class DockerImageInspector(object):
             headers["Authorization"] = "Bearer %s" % self.token
         r = requests.get(url, headers=headers, timeout=(3.05,10))
         r.raise_for_status()
-        for l in r.json()["fsLayers"]:
-            self.layers.add(l["blobSum"])
         self.manifest = r.json()
+        for l in self.manifest["fsLayers"]:
+            self.layers.add(l["blobSum"])
+        if "history" in self.manifest:
+            if "v1Compatibility" in self.manifest["history"][0]:
+                hist = json.loads(self.manifest["history"][0]["v1Compatibility"])
+                self.create_date = dateutil.parser.parse(hist["created"])
         self.manifest_content_type = r.headers["content-type"]
 
     def get_layer_size(self, layer_hash):
@@ -140,6 +146,7 @@ if __name__ == "__main__":
     print("Tag: %s" % dii.manifest["tag"])
     print("Architecture: %s" % dii.manifest["architecture"])
     print("Number of history entries: %d" % len(dii.manifest["history"]))
+    print("Create date: %s" % dii.create_date.strftime("%Y-%m-%d %H:%M:%S"))
     print("Configuration:")
     print(json.dumps(json.loads(dii.manifest["history"][0]["v1Compatibility"])["container_config"], indent=2))
     print("Number of layers: %d" % len(dii.layers))

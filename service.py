@@ -62,12 +62,15 @@ def canonical_image_details(registry, namespace, image):
             "name": dii.manifest["name"],
             "tag": dii.manifest["tag"],
             "architecture": dii.manifest["architecture"],
+            "create_date": None,
             "history_length": len(dii.manifest["history"]),
             "num_layers": len(dii.layers),
             "config": json.loads(dii.manifest["history"][0]["v1Compatibility"])["container_config"],
             "layers": [],
             "image_size": 0
         }
+        if dii.create_date is not None:
+            result["create_date"] = dii.create_date.isoformat()
         for l in dii.layers:
             bytesize = dii.get_layer_size(l)
             if bytesize is not None:
